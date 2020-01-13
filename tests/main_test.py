@@ -2,10 +2,11 @@ import unittest
 from flask import url_for, session
 from app import models, create_app
 from app.basic import log
+from app.config import Config
 
 
 class FlaskTestClient(unittest.TestCase):
-    
+
     def init(self):
         # you can fix these values after faking(models.py) data to database
         self.student_email = 'shirley@mudo.gov'
@@ -14,7 +15,8 @@ class FlaskTestClient(unittest.TestCase):
         self.school_admin_email = 'susan@meevee.com'
         self.default_password = '12345678'
         self.school_name = 'Babbleblab'
-        
+        Config.ENCRYPT_SESSION = False
+
     def setUp(self):
         self.init()
         self.app = create_app()
@@ -32,13 +34,13 @@ class FlaskTestClient(unittest.TestCase):
         assert resp.status_code == 200
         resp = self.client.get('/schools')
         assert resp.status_code == 200
-        resp = self.client.get('/teacher')
+        resp = self.client.get('/teachers')
         assert resp.status_code == 200
 
     def test_invalid_user(self):
         with self.client as client:
             # login
-            client.post('/login', data={'email': 'nosuchuser@email.com', 'password':'password'})
+            client.post('/login', data={'email': 'nosuchuser@email.com', 'password': 'password'})
             resp = client.get(url_for('auth.login'))
             assert 'Incorrect email or password.' in resp.data.decode()
             # course
@@ -64,7 +66,7 @@ class FlaskTestClient(unittest.TestCase):
             resp = client.get(url_for('per.info_page'))
             assert '学生' in resp.data.decode()
             # teacher
-            client.post('/login', data={'email':self.teacher_email, 'password': self.default_password})
+            client.post('/login', data={'email': self.teacher_email, 'password': self.default_password})
             resp = client.get(url_for('per.info_page'))
             assert '教师' in resp.data.decode()
             # school administrator
@@ -76,8 +78,8 @@ class FlaskTestClient(unittest.TestCase):
             resp = client.get(url_for('per.info_page'))
             assert '家长' in resp.data.decode()
             # new user
-            client.post('/register', data={'email': 'testuser@test.coml', 'password':self.default_password,
-                                           'name':'testname', 'identity': 1})
+            client.post('/register', data={'email': 'testuser@test.coml', 'password': self.default_password,
+                                           'name': 'testname', 'identity': 1})
             client.post('/login', data={'email': 'testuser@test.coml', 'password': self.default_password})
             resp = client.get(url_for('per.info_page'))
             assert '学生' in resp.data.decode()
@@ -95,15 +97,15 @@ class FlaskTestClient(unittest.TestCase):
             assert '课程信息' in resp.data.decode()
             # note
             resp = client.post(url_for('cos.note', c_id=1), data=
-                {'n_name':'testNote','n_cont':'some words','n_dtime':'2017-09-11 13:26'})
+            {'n_name': 'testNote', 'n_cont': 'some words', 'n_dtime': '2017-09-11 13:26'})
             assert 'accepted' in resp.data.decode()
-            resp= client.get(url_for('cos.note', c_id=1))
+            resp = client.get(url_for('cos.note', c_id=1))
             assert 'testNote' in resp.data.decode()
             # group
             resp = client.get(url_for('cos.group', c_id=1))
             assert '讨论区' in resp.data.decode()
             # post
-            resp = client.post(url_for('cos.post', c_id=1), data={'p_title':'TestPost', 'p_cont':'TestContent'})
+            resp = client.post(url_for('cos.post', c_id=1), data={'p_title': 'TestPost', 'p_cont': 'TestContent'})
             assert resp.headers['Location'] == url_for('cos.group', c_id=1, _external=True)
             resp = client.get(url_for('cos.group', c_id=1))
             assert 'TestPost' in resp.data.decode()
@@ -120,7 +122,7 @@ class FlaskTestClient(unittest.TestCase):
             resp = client.get(url_for('per.info_page'))
             assert '学生' in resp.data.decode()
             # like
-            resp = client.post(url_for('per.like'), data={'pid':'1', 'title':'Elementum libero convallis erat!'})
+            resp = client.post(url_for('per.like'), data={'pid': '1', 'title': 'Elementum libero convallis erat!'})
             assert 'accepted' in resp.data.decode()
             client.post(url_for('per.like'), data={'pid': '1', 'title': 'Elementum libero convallis erat!'})
             resp = client.get(url_for('per.like'))
@@ -156,10 +158,10 @@ class FlaskTestClient(unittest.TestCase):
     def test_school(self):
         with self.client as client:
             # apply
-            client.post('/login', data={'email':self.teacher_email, 'password': self.default_password})
+            client.post('/login', data={'email': self.teacher_email, 'password': self.default_password})
             resp = client.get(url_for('sch.apply'))
             assert '申请' in resp.data.decode()
-            client.post(url_for('sch.apply'), data={'school-name':self.school_name})
+            client.post(url_for('sch.apply'), data={'school-name': self.school_name})
             resp = client.get(url_for('sch.apply'))
             assert 'submitted' in resp.data.decode()
             client.post('/login', data={'email': self.school_admin_email, 'password': self.default_password})
@@ -169,9 +171,13 @@ class FlaskTestClient(unittest.TestCase):
             resp = client.get(url_for('sch.apply'))
             assert 'already existed' in resp.data.decode()
             # accept
-            resp = client.post(url_for('sch.accept'), data={'accepted':['11']})
+            resp = client.post(url_for('sch.accept'), data={'accepted': ['11']})
             assert 'Operation succeed' in resp.data.decode()
 
+    def test_pagination(self):
+        with self.client as client:
+            resp = client.get('/mall?p=100')
+            self.assertTrue('No more courses' in resp.data.decode())
 
 if __name__ == '__main__':
     unittest.main()

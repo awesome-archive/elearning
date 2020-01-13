@@ -1,5 +1,5 @@
 # ELearning
-![Flask](https://img.shields.io/badge/Flask--red.svg)  ![Building](https://img.shields.io/badge/-Building-brightgreen.svg)
+![Flask](https://img.shields.io/badge/Flask-0.12.2-red.svg)  ![Updating](https://img.shields.io/badge/Project-updating-brightgreen.svg)
 
 ** A simple e-learning backend **
 
@@ -12,6 +12,7 @@ If you meet questions when you read this program, you are welcome to contact wit
 : )
 
 ## Structure
+note: there are some prepared files in static and templates folder to make a simple view.
 - auth/
   - register
   - login(different roles, google+)
@@ -60,6 +61,7 @@ If you meet questions when you read this program, you are welcome to contact wit
 - tests/
   - test some not all functions
 - \_\_init__.py
+  - salted session implementation
   - create Flask app
 - basic.py/
   - offer some basic opertions
@@ -74,7 +76,12 @@ If you meet questions when you read this program, you are welcome to contact wit
   - some addtional opertions
 
 ## Waiting to do
-contact operations
+  - contact operations
+  - route optimization
+  - improve paypal process
+  - improve google+ login process
 
 ## Change log
-add test module and fix some details
+  - add the test module and fix some details
+  - add a salted session choice
+  - add a simple pagination

@@ -9,17 +9,18 @@ import random
 from datetime import datetime
 from app.db import engine
 
+# from .db import create_session
 Base = declarative_base()
 
 
-def close_session(s):
-    s[0].close()
+# def close_session(s):
+#     s[0].close()
 
 
 class DBMixin(object):
 
     session = create_session()
-    clear_exit = atexit.register(close_session, (session,))
+    # clear_exit = atexit.register(close_session, (session,))
 
     @classmethod
     def insert(cls, obj):
@@ -46,6 +47,11 @@ class DBMixin(object):
     @classmethod
     def query_one(cls, *args):
         r = cls.session.query(cls).filter(*args).first()
+        return r
+
+    @classmethod
+    def query_range(cls, *args, order_key=None, start, stop):
+        r = cls.session.query(cls).filter(*args).order_by(order_key).slice(start, stop).all()
         return r
 
     @classmethod
@@ -76,6 +82,7 @@ class User(Base, DBMixin):
     u_gmail = Column(String(255))
     u_name = Column(String(255))
     u_password = Column(String(255), nullable=False)
+    # value=>identity: 1=>student, 2=>teacher, 3=>school administrator, 4=>parent
     u_role = Column(Integer(), nullable=False)
     u_own = Column(Text(), nullable=False) # own courses
     u_gender = Column(String(16))
@@ -389,7 +396,7 @@ class Post(Base, DBMixin):
 
     @classmethod
     def fake_data(cls):
-        for i in range(50):
+        for i in range(150):
             cls.insert(Post(
                 p_title=forgery.lorem_ipsum.title(),
                 p_dtime=forgery.date.datetime(True, min_delta=50, max_delta=365),
